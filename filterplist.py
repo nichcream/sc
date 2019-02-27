@@ -4,8 +4,8 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('from_src', type=str,
-                    help='source that comes after \'- from\' (typed in full)')
+parser.add_argument('src_name', type=str,
+                    help='source name that comes after \'- from\' (typed in full)')
 parser.add_argument('-f', '--file', type=str,
                     help='File or path leading to the referenced proprietary files list')
 parser.add_argument('-o', '--out', type=str,
@@ -19,10 +19,12 @@ canCopy = False
 
 newlines= list()
 
-for index, line in enumerate(lines):
+for line in lines:
     # Remove '\n'
-    line = line[:-1]
+    if line[-1:] == '\n':
+        line = line[:-1]
 
+    # end of section
     if len(line) == 0:
         if canCopy:
             newlines.append('')
@@ -31,14 +33,14 @@ for index, line in enumerate(lines):
 
     if (line.startswith('#')) and (' - from' in line):
         foo = line.split(' - from ')
-        if foo[1] == args.from_src:
-        	canCopy = True
+        if foo[1] == args.src_name:
+            canCopy = True
 
     if canCopy:
         newlines.append(line)
 
 with open(args.out if args.out else 'new.txt', 'w') as f:
-    for line in newlines:
-        f.write("%s\n" % line)
-
-    f.close()
+    for index, line in enumerate(newlines):
+        # if last line is empty, ignore
+        if (index < len(newlines) - 1) or (len(line) > 0):
+            f.write("%s\n" % line)
